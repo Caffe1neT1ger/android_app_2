@@ -13,52 +13,62 @@ import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    // "База" пользователей – только для примера
+    // Логин и пароль для пользователя
     private val correctLogin = "admin"
     private val correctPassword = "12345"
-    private val MAX_ATTEMPTS = 3                     // сколько попыток разрешено
-    private val PREFS_NAME = "login_prefs"           // имя файла SharedPreferences
+    // Кол-во попыток
+    private val MAX_ATTEMPTS = 3
+    // Ключи для доступа к данным из shared preferences
+    private val PREFS_NAME = "login_prefs"
     private val KEY_ATTEMPTS = "attempts_cnt"
-    private var attemptCount = 0 // ключ количества неудач
+    // Ключ количества неудач
+    private var attemptCount = 0
 
     // Запрос на ввод системного PIN/пароля/отпечатка
     private val credentialIntentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            // Пользователь прошёлку устройства →ходим к com.example.app2_extra.SecondActivity
+            // Пользователь корректно ввел PIN код
             startActivity(Intent(this, SecondActivity::class.java))
         } else {
-            // НЕ прошёл (отменила форма или ввёл неверно)
+            // Некорректный ввод или отмена ввода
             Toast.makeText(this, getString(R.string.error_device_pin), Toast.LENGTH_SHORT).show()
         }
     }
-    /**рабатывает ввод логина/пароля */
+    // Обработчик для кнопки Login
     private fun handleLogin(
         login: String,
         password: String,
         btnLogin: Button
     ) {
+
+        // Проверка введенных данных
         if (login == correctLogin && password == correctPassword) {
-            // ✅ Успешный вход – сбрасываем счётчик
+            // Сброс кол-ва попыток
             resetAttempts()
+            // Функция вызова системного интерфейса PIN кода
             askForDeviceCredential()
         } else {
-            // ❌ Ошибка – увеличиваем счётчик
+            // Увеличиваем кол-во неуспешных попыток
             attemptCount++
+            // Сохраняем кол-во неуспешных попыток в shared preferences
             saveAttempts()
 
+            // Логика проверки кол-ва неуспешных попыток и блокировка кнопки
             if (attemptCount >= MAX_ATTEMPTS) {
-                // Достигнут лимит – блокируем кнопку
+                // Блокировка кнопки
                 blockLoginButton(btnLogin)
+                // Вызов тоста
                 Toast.makeText(
                     this,
                     "Превышено количество попыток. Кнопка отключена.",
                     Toast.LENGTH_LONG
                 ).show()
             } else {
-                // Сообщаем сколько осталось попыток
+                // Кол-во оставшихся попыток
                 val left = MAX_ATTEMPTS - attemptCount
+                // Вызов информационного тоста
                 Toast.makeText(
                     this,
                     "Осталось попыток: $left",
@@ -67,21 +77,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    // Блокировка кнопки
     private fun blockLoginButton(button: Button) {
         button.isEnabled = false
-        // Изменяем прозрачность, чтобы пользователь видел, что кнопка отключена
+        // Изменение прозрачности
         button.alpha = 0.5f
     }
-    /** Сохраняем текущее количество неверных попыток */
+    // Сохранение кол-ва неуспешных попыток в shared preferences
     private fun saveAttempts() {
+        // Получение данных по ключу из shared preferences
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // Изменение данных
         prefs.edit().putInt(KEY_ATTEMPTS, attemptCount).apply()
     }
 
-    /** После успешного входа обнуляем сччик */
+    // Обнуление кол-ва неуспешных попыток
     private fun resetAttempts() {
         attemptCount = 0
+        // Получение данных по ключу из shared preferences
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // Изменение данных
         prefs.edit().remove(KEY_ATTEMPTS).apply()
     }
 
@@ -92,13 +107,16 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         attemptCount = prefs.getInt(KEY_ATTEMPTS, 0)
 
+        // Получение объектов UI по их шв для взаимодействия с ними
         val etLogin = findViewById<EditText>(R.id.etLogin)
         val etPassword = findViewById<EditText>(R.id.etPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
 
+        // Обработчик событий для кнопки
         btnLogin.setOnClickListener {
             if (btnLogin.isEnabled) {
                 handleLogin(
+                    // Передаем данные из текстовых полей
                     login = etLogin.text.toString(),
                     password = etPassword.text.toString(),
                     btnLogin = btnLogin
@@ -107,22 +125,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Показывает системный диалог подтверждения учётных данных устройства */
+    // Вызов системного интерфейса PIN кода
     private fun askForDeviceCredential() {
         val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        // Если устройство поддерживает такой запрос
+        // Проверка на наличие функций защиты (PIN, отпечаток, сканер и т.д.)
         if (km.isDeviceSecure) {
             val intent = km.createConfirmDeviceCredentialIntent(
                 "Требуется подтверждение",
                 "Введите PIN/пароль/отпечаток"
             )
-            // Если пользователь вообще может подтвердить (все устройства с Android 5+)
+            // Если создается объект, то есть устройство поддерживает данный функционал
             if (intent != null) {
                 credentialIntentLauncher.launch(intent)
                 return
             }
         }
-        // Если по какой‑то причине нельзя (например, без экрана блокировки)
+        // Тост отсутсвия функций защиты
         Toast.makeText(this, "Устройство не защищено PIN‑кодом", Toast.LENGTH_SHORT).show()
     }
 }

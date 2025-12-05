@@ -10,9 +10,10 @@ class SecondActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_second)
 
+        // Получение обхекта кнопки по id
         val btnExit = findViewById<Button>(R.id.btnExit)
 
-        // Выход из приложения – закрыть все активити
+        // Обработчик событий на кнопку на нажатие
         btnExit.setOnClickListener {
             // finishAffinity() закрывает текущую и все родительские задачи
             finishAffinity()
