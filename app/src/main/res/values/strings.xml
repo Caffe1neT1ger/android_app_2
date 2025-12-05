@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">app2_extra</string>
+    <string name="login_hint">Логин</string>
+    <string name="password_hint">Пароль</string>
+    <string name="button_login">Войти</string>
+    <string name="welcome_text">Успешный запуск!</string>
+    <string name="button_exit">Выход</string>
+    <string name="error_credentials">Неверный логин или пароль</string>
+    <string name="error_device_pin">Не удалось пройти проверку PIN‑кода</string>
+    <string name="developer">
+        ИКТБ-48м:\n
+        1. Калмыков А.\n
+        2. Пимашин Е.\n
+        3. Теряев М.\n
+    </string>
+</resources>
